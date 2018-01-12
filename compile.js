@@ -105,9 +105,13 @@ function compileExport(ctx, options) {
 
 function compileInverseExport(ctx, options) {
     var exportsVar = options.exports || 'exports';
-    var parentName = ctx._root ? '' : ctx._name.substr(0, ctx._name.indexOf(ctx._proto.name));
+    var parentName = getParentName(ctx);
 
     return (ctx._root ? 'var ' + ctx._name + ' = ' + exportsVar + '.' : '') + parentName + '_inv_' + ctx._proto.name + ' =';
+}
+
+function getParentName(ctx) {
+  return ctx._root ? '' : ctx._name.substr(0, ctx._name.indexOf(ctx._proto.name));
 }
 
 function compileDest(ctx) {
@@ -156,7 +160,7 @@ function compileFieldRead(ctx, field) {
     case 'float':    return prefix + 'Float' + suffix;
     case 'double':   return prefix + 'Double' + suffix;
     case 'bool':     return prefix + 'Boolean' + suffix;
-    case 'enum':
+    case 'enum':     return getParentName(type) + '_inv_' + type._proto.name + '['+ prefix + 'Varint' + suffix + ']';
     case 'uint32':
     case 'uint64':
     case 'int32':
@@ -176,9 +180,10 @@ function compileFieldWrite(ctx, field, name) {
     var prefix = 'pbf.write';
     if (isPacked(field)) prefix += 'Packed';
 
-    var postfix = (isPacked(field) ? '' : 'Field') + '(' + field.tag + ', ' + name + ')';
-
     var type = getType(ctx, field);
+
+    var postfix = (isPacked(field) ? '' : 'Field') + '(' + field.tag + ', ' + (type ? type._name + '[' + name + ']' : name) + ')';
+
     if (type) {
         if (type._proto.fields) return prefix + 'Message(' + field.tag + ', ' + type._name + '.write, ' + name + ')';
         if (type._proto.values) return prefix + 'Varint' + postfix;
