@@ -24,7 +24,6 @@ function writeContext(ctx, options) {
     if (ctx._proto.fields) code += writeMessage(ctx, options);
     if (ctx._proto.values) {
         code += writeEnum(ctx, options);
-        code += writeInverseEnum(ctx, options);
     }
 
     for (var i = 0; i < ctx._children.length; i++) {
@@ -88,8 +87,15 @@ function writeMessage(ctx, options) {
 }
 
 function writeEnum(ctx, options) {
+    var values = ctx._proto.values;
+    var inverse = {};
+    Object.keys(values).forEach(function(key) {
+        inverse[values[key]] = key;
+    });
     return '\n' + compileExport(ctx, options) + ' ' +
-        JSON.stringify(ctx._proto.values, null, 4) + ';\n';
+        JSON.stringify(ctx._proto.values, null, 4) + ';\n' +
+        '\n' + compileInverseExport(ctx, options) + ' ' +
+        JSON.stringify(inverse, null, 4) + ';\n';
 }
 
 function compileExport(ctx, options) {
@@ -97,19 +103,11 @@ function compileExport(ctx, options) {
     return (ctx._root ? 'var ' + ctx._name + ' = ' + exportsVar + '.' : '') + ctx._name + ' =';
 }
 
-function writeInverseEnum(ctx, options) {
-    var values = ctx._proto.values;
-    var inverse = {};
-    Object.keys(values).forEach(function(key) {
-        inverse[values[key]] = key;
-    });
-    return '\n' + compileInverseExport(ctx, options) + ' ' +
-        JSON.stringify(inverse, null, 4) + ';\n';
-}
-
 function compileInverseExport(ctx, options) {
     var exportsVar = options.exports || 'exports';
-    return (ctx._root ? 'var ' + ctx._name + ' = ' + exportsVar + '.' : '') + '_inv_' + ctx._name + ' =';
+    var parentName = ctx._root ? '' : ctx._name.substr(0, ctx._name.indexOf(ctx._proto.name));
+
+    return (ctx._root ? 'var ' + ctx._name + ' = ' + exportsVar + '.' : '') + parentName + '_inv_' + ctx._proto.name + ' =';
 }
 
 function compileDest(ctx) {
