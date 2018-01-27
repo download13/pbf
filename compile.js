@@ -111,7 +111,7 @@ function compileInverseExport(ctx, options) {
 }
 
 function getParentName(ctx) {
-  return ctx._root ? '' : ctx._name.substr(0, ctx._name.indexOf(ctx._proto.name));
+    return ctx._root ? '' : ctx._name.substr(0, ctx._name.indexOf(ctx._proto.name));
 }
 
 function compileDest(ctx) {
@@ -160,7 +160,7 @@ function compileFieldRead(ctx, field) {
     case 'float':    return prefix + 'Float' + suffix;
     case 'double':   return prefix + 'Double' + suffix;
     case 'bool':     return prefix + 'Boolean' + suffix;
-    case 'enum':     return getParentName(type) + '_inv_' + type._proto.name + '['+ prefix + 'Varint' + suffix + ']';
+    case 'enum':     return getParentName(type) + '_inv_' + type._proto.name + '[' + prefix + 'Varint' + suffix + ']';
     case 'uint32':
     case 'uint64':
     case 'int32':
